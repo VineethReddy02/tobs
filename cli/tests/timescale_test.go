@@ -16,7 +16,7 @@ func testTimescaleGetPassword(t testing.TB, user string) {
 	}
 
 	t.Logf("Running '%v'", "tobs "+strings.Join(cmds, " "))
-	getpass := exec.Command("tobs", cmds...)
+	getpass := exec.Command("./../bin/tobs", cmds...)
 
 	out, err := getpass.CombinedOutput()
 	if err != nil {
@@ -35,7 +35,7 @@ func testTimescaleChangePassword(t testing.TB, user, dbname, newpass string) {
 	}
 
 	t.Logf("Running '%v'", "tobs "+strings.Join(cmds, " "))
-	changepass := exec.Command("tobs", cmds...)
+	changepass := exec.Command("./../bin/tobs", cmds...)
 
 	out, err := changepass.CombinedOutput()
 	if err != nil {
@@ -45,7 +45,7 @@ func testTimescaleChangePassword(t testing.TB, user, dbname, newpass string) {
 }
 
 func verifyTimescalePassword(t testing.TB, user string, expectedPass string) {
-	getpass := exec.Command("tobs", "timescaledb", "get-password", "-U", user, "-n", RELEASE_NAME, "--namespace", NAMESPACE)
+	getpass := exec.Command("./../bin/tobs", "timescaledb", "get-password", "-U", user, "-n", RELEASE_NAME, "--namespace", NAMESPACE)
 
 	out, err := getpass.CombinedOutput()
 	if err != nil {
@@ -65,7 +65,7 @@ func testTimescalePortForward(t testing.TB, port string) {
 	}
 
 	t.Logf("Running '%v'", "tobs "+strings.Join(cmds, " "))
-	portforward := exec.Command("tobs", cmds...)
+	portforward := exec.Command("./../bin/tobs", cmds...)
 
 	err := portforward.Start()
 	if err != nil {
@@ -82,7 +82,10 @@ func testTimescalePortForward(t testing.TB, port string) {
 		t.Fatal(err)
 	}
 
-	portforward.Process.Signal(syscall.SIGINT)
+	err = portforward.Process.Signal(syscall.SIGINT)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func testTimescaleConnect(t testing.TB, master bool, user string) {
@@ -90,14 +93,14 @@ func testTimescaleConnect(t testing.TB, master bool, user string) {
 
 	if master {
 		t.Logf("Running 'tobs timescaledb connect -m'")
-		connect = exec.Command("tobs", "timescaledb", "connect", "-m", "-n", RELEASE_NAME, "--namespace", NAMESPACE)
+		connect = exec.Command("./../bin/tobs", "timescaledb", "connect", "-m", "-n", RELEASE_NAME, "--namespace", NAMESPACE)
 	} else {
 		if user == "" {
 			t.Logf("Running 'tobs timescaledb connect'")
-			connect = exec.Command("tobs", "timescaledb", "connect", "-n", RELEASE_NAME, "--namespace", NAMESPACE)
+			connect = exec.Command("./../bin/tobs", "timescaledb", "connect", "-n", RELEASE_NAME, "--namespace", NAMESPACE)
 		} else {
 			t.Logf("Running 'tobs timescaledb connect -U %v'", user)
-			connect = exec.Command("tobs", "timescaledb", "connect", "-U", user, "-n", RELEASE_NAME, "--namespace", NAMESPACE)
+			connect = exec.Command("./../bin/tobs", "timescaledb", "connect", "-U", user, "-n", RELEASE_NAME, "--namespace", NAMESPACE)
 		}
 	}
 
@@ -106,10 +109,16 @@ func testTimescaleConnect(t testing.TB, master bool, user string) {
 		t.Fatal(err)
 	}
 	time.Sleep(10 * time.Second)
-	connect.Process.Signal(syscall.SIGINT)
+	err = connect.Process.Signal(syscall.SIGINT)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	deletepod := exec.Command("kubectl", "delete", "pods", "psql")
-	deletepod.Run()
+	err = deletepod.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestTimescale(t *testing.T) {

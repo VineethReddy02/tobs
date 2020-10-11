@@ -30,7 +30,7 @@ func installObs() {
 
 	log.Println("Installing The Observability Stack")
 
-	obsinstall := exec.Command("tobs", "install", "-n", RELEASE_NAME, "--namespace", NAMESPACE, "--chart-reference", "../../chart")
+	obsinstall := exec.Command("./../bin/tobs", "install", "-n", RELEASE_NAME, "--namespace", NAMESPACE, "--chart-reference", "../../chart")
 	err = obsinstall.Run()
 	if err != nil {
 		log.Println("Error installing The Observability Stack:", err)
