@@ -114,8 +114,7 @@ Custom values.yml files can be used with the `tobs helm install -f values.yml` c
 
 __Dependencies__: [Go](https://golang.org/doc/install), [Helm](https://helm.sh/docs/intro/install/)
 
-To build from source, run `go build -o tobs` from inside the `cli` folder.
-Then, move the `tobs` binary from the current directory to your `/bin` folder.
+To build from source, run `make build` from inside the `cli` folder.
 
 ## Testing
 

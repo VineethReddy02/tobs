@@ -16,7 +16,7 @@ func testPrometheusPortForward(t testing.TB, port string) {
 	}
 
 	t.Logf("Running '%v'", "tobs "+strings.Join(cmds, " "))
-	portforward := exec.Command("tobs", cmds...)
+	portforward := exec.Command("./../bin/tobs", cmds...)
 
 	err := portforward.Start()
 	if err != nil {
@@ -33,7 +33,10 @@ func testPrometheusPortForward(t testing.TB, port string) {
 		t.Fatal(err)
 	}
 
-	portforward.Process.Signal(syscall.SIGINT)
+	err = portforward.Process.Signal(syscall.SIGINT)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestPrometheus(t *testing.T) {
