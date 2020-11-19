@@ -25,7 +25,7 @@ timescaledb-single:
 #   https://github.com/timescale/promscale/tree/master/helm-chart
 promscale:
   enabled: true
-  image: timescale/promscale:0.1.0
+  image: timescale/promscale:0.1.2
   # connection options
   connection:
     # the db name in which the metrics will be stored
@@ -56,9 +56,11 @@ promscale:
       memory: 2Gi
       cpu: 1
 # Values for configuring the deployment of Prometheus
-# The stable/prometheus chart is used and the guide for it
-# can be found at:
-#   https://hub.helm.sh/charts/stable/prometheus
+# The Prometheus chart from the prometheus-community is used
+# the guide for it can be found at:
+#   https://artifacthub.io/packages/helm/prometheus-community/prometheus
+# with the default values documented at:
+#   https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus/values.yaml
 prometheus:
   enabled: true
   alertmanager:
@@ -91,11 +93,14 @@ prometheus:
         enabled: true
         # complete url = {protocol}://{host}:{port}/endpoint
         endpoint: "read"
+  #You can add other configs from https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus/values.yaml here
+  #For example, adding additional scrape jobs
+  #extraScrapeConfigs:
 
 # Values for configuring the deployment of Grafana
-# The stable/grafana chart is used and the guide for it
+# The Grafana Community chart is used and the guide for it
 # can be found at:
-#   https://hub.helm.sh/charts/stable/grafana
+#   https://github.com/grafana/helm-charts/blob/main/charts/grafana/README.md
 grafana:
   enabled: true
   sidecar:

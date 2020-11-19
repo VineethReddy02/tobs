@@ -28,7 +28,7 @@ func testpf(t testing.TB, timescale, grafana, prometheus, connector, promlens st
 	}
 
 	t.Logf("Running '%v'", "tobs "+strings.Join(cmds, " "))
-	portforward := exec.Command("tobs", cmds...)
+	portforward := exec.Command("./../bin/tobs", cmds...)
 
 	err := portforward.Start()
 	if err != nil {
@@ -73,7 +73,10 @@ func testpf(t testing.TB, timescale, grafana, prometheus, connector, promlens st
 		t.Fatal(err)
 	}
 
-	portforward.Process.Signal(syscall.SIGINT)
+	err = portforward.Process.Signal(syscall.SIGINT)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestPortForward(t *testing.T) {

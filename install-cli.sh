@@ -3,7 +3,7 @@
 set -eu
 
 INSTALLROOT=${INSTALLROOT:-"${HOME}/.tobs"}
-TOBS_VERSION=${TOBS_VERSION:-0.1.0}
+TOBS_VERSION=${TOBS_VERSION:-0.1.2}
 
 happyexit() {
   echo ""
@@ -28,7 +28,7 @@ validate_checksum() {
 
   checksum=$($checksumbin -a256 "${filename}")
 
-  if grep -Fxq "${checksum}" <<< "${checksumlist}"; then
+  if echo "${checksumlist}" | grep -Fxq "${checksum}"; then
     echo "Checksum valid."
     return 0
   else

@@ -1,5 +1,8 @@
 # tobs - The Observability Stack for Kubernetes
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/timescale/tobs)](https://goreportcard.com/report/github.com/timescale/tobs)
+[![GoDoc](https://godoc.org/github.com/timescale/tobs/cli?status.svg)](https://pkg.go.dev/github.com/timescale/tobs/cli)
+
 Tobs is a tool that aims to make it as easy as possible to install a full observability
 stack into a Kubernetes cluster. Currently this stack includes:
  * [Prometheus](https://github.com/prometheus/prometheus) to collect metrics
@@ -10,6 +13,12 @@ stack into a Kubernetes cluster. Currently this stack includes:
 
 Tobs provides a CLI tool to make deployment and operations easier. We also provide
 Helm charts that can be used directly or as sub-charts for other projects.
+
+See a demo of tobs in action by clicking the video below:
+
+<p align="center">
+<a href="https://www.youtube.com/watch?v=MSvBsXOI1ks"> <img src="https://media.giphy.com/media/e8y7Lq7V5F0K9zQs20/giphy.gif"> </a>
+</p>
 
 # 🔥 Quick start
 
@@ -53,6 +62,24 @@ Then, point your browser to http://127.0.0.1:8080/ and login with the `admin` us
 
 More details about the CLI tool can be found [here](/cli/README.md)
 
+# Configuring the stack
+
+All configuration for all components happens through the helm values.yml file.
+You can view the self-documenting [default values.yaml](chart/values.yaml) in the repo.
+We also have additional documentation about individual configuration settings in our
+[Helm chart docs](chart/README.md#configuring-helm-chart).
+
+To modify the settings, first create a values.yaml file:
+```bash
+tobs helm show-values > values.yaml
+```
+
+Then modify the values.yaml file using your favorite editor.
+Finally, deploy with the new settings using:
+```bash
+tobs install -f values.yaml
+```
+
 # 🛠Alternative deployment methods
 
 ## Using the Helm charts without the CLI tool
@@ -75,6 +102,6 @@ you're a new contributor.
 [timescaledb-helm-repo]: https://github.com/timescale/timescaledb-kubernetes/tree/master/charts/timescaledb-single
 [promscale-repo]: https://github.com/timescale/promscale
 [promscale-helm]: https://github.com/timescale/promscale/tree/master/helm-chart
-[prometheus-helm-hub]: https://hub.helm.sh/charts/stable/prometheus
+[prometheus-helm-hub]: https://prometheus-community.github.io/helm-charts
 [prometheus-remote-tune]: https://prometheus.io/docs/practices/remote_write/
-[grafana-helm-hub]: https://hub.helm.sh/charts/stable/grafana
+[grafana-helm-hub]: https://grafana.github.io/helm-charts

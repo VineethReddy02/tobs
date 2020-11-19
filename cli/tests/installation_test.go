@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"cli/cmd"
+	"github.com/timescale/tobs/cli/pkg/k8s"
 )
 
 func testInstall(t testing.TB, name, namespace, filename string) {
@@ -26,7 +26,7 @@ func testInstall(t testing.TB, name, namespace, filename string) {
 	}
 
 	t.Logf("Running '%v'", "tobs "+strings.Join(cmds, " "))
-	install := exec.Command("tobs", cmds...)
+	install := exec.Command("./../bin/tobs", cmds...)
 
 	out, err := install.CombinedOutput()
 	if err != nil {
@@ -52,7 +52,7 @@ func testHelmInstall(t testing.TB, name, namespace, filename string) {
 	}
 
 	t.Logf("Running '%v'", "tobs "+strings.Join(cmds, " "))
-	install := exec.Command("tobs", cmds...)
+	install := exec.Command("./../bin/tobs", cmds...)
 
 	out, err := install.CombinedOutput()
 	if err != nil {
@@ -78,7 +78,7 @@ func testUninstall(t testing.TB, name, namespace string, deleteData bool) {
 	}
 
 	t.Logf("Running '%v'", "tobs "+strings.Join(cmds, " "))
-	uninstall := exec.Command("tobs", cmds...)
+	uninstall := exec.Command("./../bin/tobs", cmds...)
 
 	out, err := uninstall.CombinedOutput()
 	if err != nil {
@@ -104,7 +104,7 @@ func testHelmUninstall(t testing.TB, name, namespace string, deleteData bool) {
 	}
 
 	t.Logf("Running '%v'", "tobs "+strings.Join(cmds, " "))
-	uninstall := exec.Command("tobs", cmds...)
+	uninstall := exec.Command("./../bin/tobs", cmds...)
 
 	out, err := uninstall.CombinedOutput()
 	if err != nil {
@@ -112,7 +112,7 @@ func testHelmUninstall(t testing.TB, name, namespace string, deleteData bool) {
 		t.Fatal(err)
 	}
 
-	pods, err := cmd.KubeGetAllPods("tobs", "default")
+	pods, err := k8s.KubeGetAllPods("tobs", "default")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func testHelmDeleteData(t testing.TB, name, namespace string) {
 	}
 
 	t.Logf("Running '%v'", "tobs "+strings.Join(cmds, " "))
-	deletedata := exec.Command("tobs", cmds...)
+	deletedata := exec.Command("./../bin/tobs", cmds...)
 
 	out, err := deletedata.CombinedOutput()
 	if err != nil {
@@ -144,7 +144,7 @@ func testHelmDeleteData(t testing.TB, name, namespace string) {
 		t.Fatal(err)
 	}
 
-	pvcs, err := cmd.KubeGetPVCNames("default", map[string]string{})
+	pvcs, err := k8s.KubeGetPVCNames("default", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,7 +157,7 @@ func testHelmShowValues(t testing.TB) {
 	var showvalues *exec.Cmd
 
 	t.Logf("Running 'tobs helm show-values'")
-	showvalues = exec.Command("tobs", "helm", "show-values")
+	showvalues = exec.Command("./../bin/tobs", "helm", "show-values")
 
 	out, err := showvalues.CombinedOutput()
 	if err != nil {
@@ -208,14 +208,14 @@ func TestInstallation(t *testing.T) {
 	time.Sleep(10 * time.Second)
 
 	t.Logf("Waiting for pods to initialize...")
-	pods, err := cmd.KubeGetAllPods(NAMESPACE, RELEASE_NAME)
+	pods, err := k8s.KubeGetAllPods(NAMESPACE, RELEASE_NAME)
 	if err != nil {
 		t.Logf("Error getting all pods")
 		t.Fatal(err)
 	}
 
 	for _, pod := range pods {
-		err = cmd.KubeWaitOnPod(NAMESPACE, pod.Name)
+		err = k8s.KubeWaitOnPod(NAMESPACE, pod.Name)
 		if err != nil {
 			t.Logf("Error while waiting on pod")
 			t.Fatal(err)
