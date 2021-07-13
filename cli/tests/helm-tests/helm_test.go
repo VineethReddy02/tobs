@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"testing"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -27,7 +28,31 @@ var (
 	TOBS_VERSION        = "0.5.0"
 )
 
-func TestNewHelmClient(t *testing.T) {
+func TestMain(m *testing.M) {
+	// Signal handling
+	sigchan := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+	signal.Notify(sigchan, os.Interrupt)
+	go func() {
+		<-sigchan
+		done <- true
+		os.Exit(1)
+	}()
+
+	testNewHelmClient()
+
+	testHelmClientAddOrUpdateChartRepoPublic()
+
+	testHelmClientInstallOrUpgradeChart()
+
+	code := m.Run()
+
+	testHelmClientListDeployedReleases()
+
+	os.Exit(code)
+}
+
+func testNewHelmClient() {
 	opt := &helm.ClientOptions{
 		Namespace: NAMESPACE,
 		Linting:   true,
@@ -38,7 +63,7 @@ func TestNewHelmClient(t *testing.T) {
 	var err error
 	helmClientTest, err = helm.New(opt)
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 }
 
@@ -68,10 +93,51 @@ func testUnSetHelmNamespaceEnv() {
 	}
 }
 
-func TestHelmClientAddOrUpdateChartRepoPublic(t *testing.T) {
+func testHelmClientAddOrUpdateChartRepoPublic() {
 	// Add a chart-repository to the client
 	if err := helmClientTest.AddOrUpdateChartRepo(utils.DEFAULT_REGISTRY_NAME, utils.REPO_LOCATION); err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
+	}
+}
+
+func testHelmClientInstallOrUpgradeChart() {
+	log.Println("Installing Tobs secrets...")
+	runTsdb := exec.Command(PATH_TO_TOBS, "install", "--namespace", NAMESPACE, "--only-secrets")
+	_, err := runTsdb.CombinedOutput()
+	if err != nil {
+		log.Fatalf("Error installing tobs secrets %v:", err)
+	}
+
+	// Define the chart to be installed
+	chartSpec := helm.ChartSpec{
+		ReleaseName:     "tobs",
+		ChartName:       CHART_NAME,
+		Namespace:       NAMESPACE,
+		Version:         TOBS_VERSION,
+		CreateNamespace: true,
+		ValuesFiles:     []string{PATH_TO_TEST_VALUES},
+	}
+
+	res, err := helmClientTest.InstallOrUpgradeChart(context.Background(), &chartSpec)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if res.Info.Status != "deployed" {
+		log.Fatal("failed to perform helm chart install")
+	}
+}
+
+func testHelmClientListDeployedReleases() {
+	res, err := helmClientTest.GetDeployedChartMetadata("tobs")
+	if err == nil && res.Name == "tobs" {
+		log.Fatal("the tobs release after uninstalling are still showing up....", res)
+	}
+	testUnSetHelmNamespaceEnv()
+
+	ns := os.Getenv("HELM_NAMESPACE")
+	if ns != oldNamespaceFromEnv || ns != "hii" {
+		log.Fatal("failed to set back old HELM_NAMESPACE value to env variable")
 	}
 }
 
@@ -120,34 +186,6 @@ func TestGetChartValues(t *testing.T) {
 	}
 }
 
-func TestHelmClientInstallOrUpgradeChart(t *testing.T) {
-	t.Log("Installing Tobs secrets...")
-	runTsdb := exec.Command(PATH_TO_TOBS, "install", "--namespace", NAMESPACE, "--only-secrets")
-	_, err := runTsdb.CombinedOutput()
-	if err != nil {
-		t.Fatalf("Error installing tobs secrets %v:", err)
-	}
-
-	// Define the chart to be installed
-	chartSpec := helm.ChartSpec{
-		ReleaseName:     "tobs",
-		ChartName:       CHART_NAME,
-		Namespace:       NAMESPACE,
-		Version:         TOBS_VERSION,
-		CreateNamespace: true,
-		ValuesFiles:     []string{PATH_TO_TEST_VALUES},
-	}
-
-	res, err := helmClientTest.InstallOrUpgradeChart(context.Background(), &chartSpec)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if res.Info.Status != "deployed" {
-		t.Fatal("failed to perform helm chart install")
-	}
-}
-
 func TestGetDeployedChartMetadata(t *testing.T) {
 	chart, err := helmClientTest.GetDeployedChartMetadata("tobs")
 	if err != nil {
@@ -189,21 +227,8 @@ func TestHelmClientUninstallRelease(t *testing.T) {
 		Namespace:   NAMESPACE,
 	}
 
-	TestNewHelmClient(t)
+	testNewHelmClient()
 	if err := helmClientTest.UninstallRelease(&chartSpec); err != nil {
 		t.Fatal(err)
-	}
-}
-
-func TestHelmClientListDeployedReleases(t *testing.T) {
-	res, err := helmClientTest.GetDeployedChartMetadata("tobs")
-	if err == nil && res.Name == "tobs" {
-		t.Fatal("the tobs release after uninstalling are still showing up....", res)
-	}
-	testUnSetHelmNamespaceEnv()
-
-	ns := os.Getenv("HELM_NAMESPACE")
-	if ns != oldNamespaceFromEnv || ns != "hii" {
-		t.Fatal("failed to set back old HELM_NAMESPACE value to env variable")
 	}
 }
